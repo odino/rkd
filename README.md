@@ -96,7 +96,19 @@ rkt --insecure-options=image run --interactive --volume src,kind=host,source=/ho
 server started...
 ```
 
+But let's see what happens if we run `prod.aci`:
+
+```
+$ sudo  rkt --insecure-options=image run --interactive prod.aci
+server started...
+```
+
+Right: no `nodemon`, no dev dependencies -- that's the image you could possibly
+run on your production servers, like the one built with `docker build` (rather than `docker-compose build`).
+
 ## Installation
+
+> Make sure [acbuild](https://github.com/containers/build) is installed in your system.
 
 Builds for a few linux systems are available in the [releases](https://github.com/odino/rkd/releases).
 
@@ -111,3 +123,23 @@ mv rkd /usr/bin
 ```
 
 and then you have the `rkd` executable up & running.
+
+## Why this?
+
+One of the arguments against rkt is that building and running containers seems
+generally more complicated than using docker, so I decided to figure out a way
+to replicate docker's simplicity on dev environments -- 2 files, one command,
+app running.
+
+The `*.rkd` files are basically a list or `acbuild` instructions used for
+building 2 ACIs (`prod.aci` & `dev.aci`): `rkd` scans them, building the ACIs,
+and bases `dev.aci` off of what it build in `prod.aci`.
+
+## Troubleshooting
+
+* if an `acbuild` errors you will need to en it manually (`acbuild end`) before running `rkd` again
+
+There's a plethora of stuff that could / needs to be done here as this is an early stage weekend
+project. There's very less error handling etc in the codebase and that's
+something I wish to work on granted that (1) I can find the time and (2) there's
+some interest here.
