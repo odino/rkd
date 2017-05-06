@@ -1,0 +1,7 @@
+set-name example.com/node-hello
+dep add quay.io/coreos/alpine-sh
+run -- apk add --update nodejs
+copy src /src
+set-working-directory /src
+set-exec -- node index.js
+port add www tcp 8080

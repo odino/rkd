@@ -1,0 +1,3 @@
+run -- npm install -g nodemon
+mount add src src
+set-exec -- nodemon index.js
