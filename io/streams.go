@@ -1,16 +1,16 @@
 package io
 
 import (
-	"os"
 	"io"
 	"io/ioutil"
+	"os"
 )
 
 // Struct representing IO for a
 // command to be executed on the
 // system
 type IO struct {
-  Stdin, Stdout, Stderr io.Writer
+	Stdin, Stdout, Stderr io.Writer
 }
 
 // Creates an IO struct geared towards

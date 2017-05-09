@@ -71,10 +71,7 @@ func buildAci(env string) {
 // that make it easy for dev
 // environments.
 func runAci() {
-	args := make([]string, 0)
-	args = append(args, "--insecure-options=image")
-	args = append(args, "run")
-	args = append(args, "--interactive")
+	command := "rkt --insecure-options=image run --interactive"
 	cwd, _ := os.Getwd()
 
 	file, err := os.Open("./dev.rkd")
@@ -89,27 +86,13 @@ func runAci() {
 		cmd := scanner.Text()
 		if cmd[0:6] == "mount " {
 			parts := strings.Split(cmd, " ")
-			args = append(args, "--volume")
-			args = append(args, parts[2]+",kind=host,source="+cwd+"/"+parts[3])
+			command += " --volume " + parts[2] + ",kind=host,source=" + cwd + "/" + parts[3]
 		}
 	}
 
-	args = append(args, "dev.aci")
-	cmd := exec.Command("rkt", args...)
-	fmt.Println("rkt", strings.Join(args, " "))
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	err = cmd.Start()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = cmd.Wait()
-
-	if err != nil {
-		panic(err)
-	}
+	command += " dev.aci"
+	fmt.Println(command)
+	execute(strings.Split(command, " "), streams.NewStdIO())
 }
 
 // Execute a command
@@ -122,13 +105,13 @@ func execute(args []string, io streams.IO) {
 
 	cmd.Stdout = io.Stdout
 
-	if (cmd.Stdout == nil) {
+	if cmd.Stdout == nil {
 		cmd.Stdout = os.Stdout
 	}
 
 	cmd.Stderr = io.Stderr
 
-	if (cmd.Stderr == nil) {
+	if cmd.Stderr == nil {
 		cmd.Stderr = os.Stderr
 	}
 
