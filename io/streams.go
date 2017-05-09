@@ -10,7 +10,8 @@ import (
 // command to be executed on the
 // system
 type IO struct {
-	Stdin, Stdout, Stderr io.Writer
+	Stdin          io.Reader
+	Stdout, Stderr io.Writer
 }
 
 // Creates an IO struct geared towards
@@ -22,7 +23,7 @@ type IO struct {
 // runs / exists, without caring too much
 // about its output.
 func NewDevNullIO() IO {
-	return IO{ioutil.Discard, ioutil.Discard, ioutil.Discard}
+	return IO{os.Stdin, ioutil.Discard, ioutil.Discard}
 }
 
 // Creates a new IO struct that relies on

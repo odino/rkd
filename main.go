@@ -15,7 +15,8 @@ import (
 //
 // Accepts a list or arguments to
 // be appended to the acbuild command
-// ie. acbuild arg1 arg2
+// ie. acbuild([arg1, arg2]) executes
+// $ acbuild arg1 arg2
 func acbuild(args []string) {
 	fmt.Println("acbuild", strings.Join(args, " "))
 	execute(append([]string{"acbuild"}, args...), streams.NewStdIO())
@@ -71,13 +72,27 @@ func buildAci(env string) {
 // that make it easy for dev
 // environments.
 func runAci() {
-	command := "rkt --insecure-options=image run --interactive"
-	cwd, _ := os.Getwd()
+	command := "rkt --insecure-options=image run --interactive " + getMountConfig() + " dev.aci"
+	fmt.Println(command)
+	execute(strings.Split(command, " "), streams.NewStdIO())
+}
 
+// Returns the configuration of dev
+// mounts formatted for a rkt command.
+//
+// What we do is parse the 'dev.rkd'
+// lin by line and if we find a 'mount'
+// instruction we format it for the
+// rkt CLI.
+func getMountConfig() string {
+	config := ""
+	cwd, _ := os.Getwd()
 	file, err := os.Open("./dev.rkd")
+
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	defer file.Close()
 
 	scanner := bufio.NewScanner(file)
@@ -86,34 +101,20 @@ func runAci() {
 		cmd := scanner.Text()
 		if cmd[0:6] == "mount " {
 			parts := strings.Split(cmd, " ")
-			command += " --volume " + parts[2] + ",kind=host,source=" + cwd + "/" + parts[3]
+			config += "--volume " + parts[2] + ",kind=host,source=" + cwd + "/" + parts[3]
 		}
 	}
 
-	command += " dev.aci"
-	fmt.Println(command)
-	execute(strings.Split(command, " "), streams.NewStdIO())
+	return config
 }
 
 // Execute a command
-//
-// If no IO if specified, it will
-// default to the invoking process'
-// stdout and stderr.
 func execute(args []string, io streams.IO) {
 	cmd := exec.Command(args[0], args[1:]...)
 
+	cmd.Stdin = io.Stdin
 	cmd.Stdout = io.Stdout
-
-	if cmd.Stdout == nil {
-		cmd.Stdout = os.Stdout
-	}
-
 	cmd.Stderr = io.Stderr
-
-	if cmd.Stderr == nil {
-		cmd.Stderr = os.Stderr
-	}
 
 	err := cmd.Start()
 
