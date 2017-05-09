@@ -7,6 +7,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	streams "./io"
 )
 
 // Run an acbuild command.
@@ -15,21 +17,8 @@ import (
 // be appended to the acbuild command
 // ie. acbuild arg1 arg2
 func acbuild(args []string) {
-	cmd := exec.Command("acbuild", args...)
 	fmt.Println("acbuild", strings.Join(args, " "))
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	err := cmd.Start()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = cmd.Wait()
-
-	if err != nil {
-		panic(err)
-	}
+	execute(append([]string{"acbuild"}, args...), streams.NewStdIO())
 }
 
 // Builds an ACI.
@@ -70,7 +59,7 @@ func buildAci(env string) {
 	acbuild([]string{"end"})
 
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 }
 
@@ -81,7 +70,7 @@ func buildAci(env string) {
 // default configurations (ie. --interactive)
 // that make it easy for dev
 // environments.
-func run() {
+func runAci() {
 	args := make([]string, 0)
 	args = append(args, "--insecure-options=image")
 	args = append(args, "run")
@@ -123,9 +112,50 @@ func run() {
 	}
 }
 
+// Execute a command
+//
+// If no IO if specified, it will
+// default to the invoking process'
+// stdout and stderr.
+func execute(args []string, io streams.IO) {
+	cmd := exec.Command(args[0], args[1:]...)
+
+	cmd.Stdout = io.Stdout
+
+	if (cmd.Stdout == nil) {
+		cmd.Stdout = os.Stdout
+	}
+
+	cmd.Stderr = io.Stderr
+
+	if (cmd.Stderr == nil) {
+		cmd.Stderr = os.Stderr
+	}
+
+	err := cmd.Start()
+
+	if err != nil {
+		panic(err)
+	}
+
+	err = cmd.Wait()
+
+	if err != nil {
+		panic(err)
+	}
+}
+
+// Make sure everything needed by rkd is
+// available on the system.
+func checkRequirements() {
+	// acbuild is installed and can run
+	execute([]string{"acbuild"}, streams.NewDevNullIO())
+}
+
 // Start the fun!
 func main() {
+	checkRequirements()
 	buildAci("prod")
 	buildAci("dev")
-	run()
+	runAci()
 }
