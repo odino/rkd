@@ -94,8 +94,7 @@ func buildAci(env string) {
 		}
 	}()
 
-	manifestFile := env + ".rkd"
-	aciPath := filepath.Join(HomeDir(), ".rkd", hash(manifestFile)+".aci")
+	aciPath := getAciPath(env)
 
 	if _, err := os.Stat(aciPath); os.IsNotExist(err) {
 		fmt.Println("Building " + aciPath)
@@ -104,7 +103,7 @@ func buildAci(env string) {
 		return
 	}
 
-	manifest := open(manifestFile)
+	manifest := open(env + ".rkd")
 	defer manifest.Close()
 	scanner := bufio.NewScanner(manifest)
 
@@ -126,6 +125,10 @@ func buildAci(env string) {
 	}
 }
 
+func getAciPath(env string) string {
+	return filepath.Join(HomeDir(), ".rkd", hash(env + ".rkd")+".aci")
+}
+
 // Run the dev.aci.
 //
 // This function runs dev.aci
@@ -134,7 +137,7 @@ func buildAci(env string) {
 // that make it easy for dev
 // environments.
 func runAci() {
-	command := "rkt --insecure-options=image run --interactive " + getMountConfig() + " dev.aci"
+	command := "rkt --insecure-options=image --net=host run --interactive " + getMountConfig() + " " + getAciPath("dev")
 	fmt.Println(command)
 	execute(strings.Split(command, " "), streams.NewStdIO())
 }
