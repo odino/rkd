@@ -1,8 +1,8 @@
 # rkd
 
-![up](https://github.com/odino/rkd/blob/master/bin/up.png?raw=true)
-
 > Think Dockerfile & docker-compose for rkt containers
+
+![up](https://github.com/odino/rkd/blob/master/bin/up.png?raw=true)
 
 `rkd` (aka *rock-it dev*) is a simple tool to build
 and run [rkt containers](https://coreos.com/rkt) locally.
