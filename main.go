@@ -2,10 +2,16 @@ package main
 
 import (
 	"bufio"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
+	"os/signal"
+	"os/user"
+	"path/filepath"
 	"strings"
 
 	streams "./io"
@@ -22,6 +28,40 @@ func acbuild(args []string) {
 	execute(append([]string{"acbuild"}, args...), streams.NewStdIO())
 }
 
+// Hash the contents of a file at the
+// given path
+func hash(path string) string {
+	h := md5.New()
+	reader := open(path)
+	defer reader.Close()
+
+	if _, err := io.Copy(h, reader); err != nil {
+		log.Fatal(err)
+	}
+
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+// Open and return a file
+func open(filePath string) *os.File {
+	manifest, err := os.Open(filePath)
+	if err != nil {
+		fmt.Println("Unable to open '" + filePath + "', aborting")
+		panic(err)
+	}
+
+	return manifest
+}
+
+// Returns the path to the home
+// directory for the user currently
+// running the program
+func HomeDir() string {
+	u, _ := user.Current()
+
+	return u.HomeDir
+}
+
 // Builds an ACI.
 //
 // ACIs can be either "prod"
@@ -31,20 +71,42 @@ func acbuild(args []string) {
 // such as a different exec command
 // or a mount volume for your code).
 func buildAci(env string) {
-	if _, err := os.Stat("./" + env + ".aci"); os.IsNotExist(err) {
-		fmt.Println("Building " + env + ".aci")
+	// Let's make sure we're able to intercept
+	// signals so that we shut the app down
+	// gracefully
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for _ = range c {
+			fmt.Println("Interrupted")
+		}
+	}()
+
+	// Let's make sure whatever happens while
+	// we're building the ACI we execute an
+	// "acbuild end" so that the user can
+	// re-trigger a build without getting the
+	// "build already in progress" error...
+	defer func() {
+		if err := recover(); err != nil {
+			acbuild([]string{"end"})
+			os.Exit(1)
+		}
+	}()
+
+	manifestFile := env + ".rkd"
+	aciPath := filepath.Join(HomeDir(), ".rkd", hash(manifestFile)+".aci")
+
+	if _, err := os.Stat(aciPath); os.IsNotExist(err) {
+		fmt.Println("Building " + aciPath)
 	} else {
-		fmt.Println(env + ".aci already built")
+		fmt.Println(aciPath + " already built")
 		return
 	}
 
-	file, err := os.Open("./" + env + ".rkd")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
+	manifest := open(manifestFile)
+	defer manifest.Close()
+	scanner := bufio.NewScanner(manifest)
 
 	if env == "prod" {
 		acbuild([]string{"begin"})
@@ -56,7 +118,7 @@ func buildAci(env string) {
 		acbuild(strings.Split(scanner.Text(), " "))
 	}
 
-	acbuild([]string{"write", env + ".aci"})
+	acbuild([]string{"write", aciPath})
 	acbuild([]string{"end"})
 
 	if err := scanner.Err(); err != nil {
@@ -87,7 +149,7 @@ func runAci() {
 func getMountConfig() string {
 	config := ""
 	cwd, _ := os.Getwd()
-	file, err := os.Open("./dev.rkd")
+	file, err := os.Open("dev.rkd")
 
 	if err != nil {
 		log.Fatal(err)
@@ -134,6 +196,13 @@ func execute(args []string, io streams.IO) {
 func checkRequirements() {
 	// acbuild is installed and can run
 	execute([]string{"acbuild"}, streams.NewDevNullIO())
+
+	// We have a directory to store ACIs
+	err := os.Mkdir(filepath.Join(HomeDir(), ".rkd"), 0755)
+
+	if err != nil && !os.IsExist(err) {
+		panic(err)
+	}
 }
 
 // Start the fun!

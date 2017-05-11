@@ -1,6 +1,6 @@
 # rkd
 
-> Think Dockerfile & docker-composer for rkt containers
+> Think Dockerfile & docker-compose for rkt containers
 
 `rkd` (aka *rock-it dev*) is a simple tool to build
 and run [rkt containers](https://coreos.com/rkt) locally.
@@ -129,15 +129,13 @@ and then you have the `rkd` executable up & running.
 One of the arguments against rkt is that building and running containers seems
 generally more complicated than using docker, so I decided to figure out a way
 to replicate docker's simplicity on dev environments -- 2 files, one command,
-app running.
+running app.
 
 The `*.rkd` files are basically a list or `acbuild` instructions used for
 building 2 ACIs (`prod.aci` & `dev.aci`): `rkd` scans them, building the ACIs,
 and bases `dev.aci` off of what it build in `prod.aci`.
 
 ## Troubleshooting
-
-* if an `acbuild` errors you will need to en it manually (`acbuild end`) before running `rkd` again
 
 There's a plethora of stuff that could / needs to be done here as this is an early stage weekend
 project. There's very less error handling etc in the codebase and that's
