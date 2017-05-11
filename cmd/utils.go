@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	utils "../utils"
+	"github.com/odino/rkd/utils"
 )
 
 func getAciPath(env string) string {

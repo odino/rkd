@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"./cmd"
+	"github.com/odino/rkd/cmd"
 )
 
 // Start the fun!

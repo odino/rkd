@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	streams "../io"
-	utils "../utils"
+	streams "github.com/odino/rkd/io"
+	"github.com/odino/rkd/utils"
 	"github.com/spf13/cobra"
 )
 

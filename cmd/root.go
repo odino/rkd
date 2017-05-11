@@ -7,5 +7,5 @@ import (
 var RootCmd = &cobra.Command{
 	Use:   "rkd",
 	Short: "rkd is docker-compose for rkt containers",
-	Long:  `Development environments powered by rkt containers with ease.`,
+	Long:  `Development environments powered by rkt containers, with ease.`,
 }

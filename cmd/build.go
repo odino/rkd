@@ -8,14 +8,14 @@ import (
 	"path/filepath"
 	"strings"
 
-	streams "../io"
-	utils "../utils"
+	streams "github.com/odino/rkd/io"
+	"github.com/odino/rkd/utils"
 	"github.com/spf13/cobra"
 )
 
 var buildCmd = &cobra.Command{
 	Use:   "build",
-	Short: "Build the ACI image",
+	Short: "Build the containers",
 	Long:  `Builds prod and dev ACIs for the current software`,
 	Run: func(cmd *cobra.Command, args []string) {
 		checkRequirements()

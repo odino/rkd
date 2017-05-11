@@ -10,7 +10,7 @@ import (
 	"os/exec"
 	"os/user"
 
-	streams "../io"
+	streams "github.com/odino/rkd/io"
 )
 
 // Hash the contents of a file at the
