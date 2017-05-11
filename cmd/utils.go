@@ -11,7 +11,7 @@ import (
 )
 
 func getAciPath(env string) string {
-	return filepath.Join(utils.HomeDir(), ".rkd", utils.Hash(env+".rkd")+".aci")
+	return filepath.Join(utils.HomeDir(), ".rkd", env + "-" + utils.Hash(env+".rkd") + ".aci")
 }
 
 // Returns the configuration of dev

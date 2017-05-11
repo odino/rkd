@@ -11,3 +11,5 @@ release:
 	GOOS=freebsd GOARCH=386; go build -o builds/rkd-$$GOOS-$$GOARCH
 	GOOS=freebsd GOARCH=amd64; go build -o builds/rkd-$$GOOS-$$GOARCH
 	ls -la builds/*
+install: build
+	sudo mv rkd /usr/local/bin
