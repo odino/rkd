@@ -9,6 +9,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var net string = "default"
+
 var upCmd = &cobra.Command{
 	Use:   "up",
 	Short: "Run the container",
@@ -27,11 +29,17 @@ var upCmd = &cobra.Command{
 // that make it easy for dev
 // environments.
 func runAci() {
-	command := "rkt --insecure-options=image --net=host run --interactive " + getMountConfig() + " " + getAciPath("dev")
+	if net == "" {
+		net = "host"
+	}
+
+	command := fmt.Sprintf("rkt --insecure-options=image --net=%s --interactive=true %s run %s", net, getMountConfig(), getAciPath("dev"))
 	fmt.Println(command)
 	utils.Execute(strings.Split(command, " "), streams.NewStdIO())
 }
 
 func init() {
 	RootCmd.AddCommand(upCmd)
+
+	upCmd.Flags().StringVarP(&net, "net", "n", "", "configure the pod's networking. Optionally, pass a list of user-configured networks to load and set arguments to pass to each network, respectively. Syntax: --net[=n[:args], ...]")
 }
