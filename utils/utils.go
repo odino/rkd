@@ -15,7 +15,7 @@ import (
 
 // Hash the contents of a file at the
 // given path
-func Hash(path string) string {
+func HashFile(path string) string {
 	h := md5.New()
 	reader := Open(path)
 	defer reader.Close()
@@ -23,6 +23,14 @@ func Hash(path string) string {
 	if _, err := io.Copy(h, reader); err != nil {
 		log.Fatal(err)
 	}
+
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+// Hashes a string
+func Hash(s string) string {
+	h := md5.New()
+	io.WriteString(h, s)
 
 	return hex.EncodeToString(h.Sum(nil))
 }
